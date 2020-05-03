@@ -17,22 +17,20 @@ class WindowHandler():
 					width=self.canvasWidth,height=self.canvasHeight,
 					bg='black')
 		self.canvas.pack()
-
 		self.initButtons()
+		self.bindEvents()
 
-		self.root.bind("<Key>",self.keyPress)
-		self.root.bind("<Button-1>",self.mousePress)
-		self.root.bind("<B1-Motion>",self.mouseHold)
-
-		self.drawer = CanvasDrawer(self.canvas)
-		self.drawGrid()
-
+		self.drawer = CanvasDrawer(self.canvas,self.canvasWidth)
 		self.game = GameLogic(INCREMENT)
 
 		self.turnON = True
 
-
 		self.drawer.initCells(self.game.cellBoard)
+
+	def bindEvents(self):
+		self.root.bind("<Key>",self.keyPress)
+		self.root.bind("<Button-1>",self.mousePress)
+		self.root.bind("<B1-Motion>",self.mouseHold)
 
 	def mousePress(self,event):
 		x2 = self.root.winfo_pointerx() - self.root.winfo_rootx()
@@ -46,9 +44,6 @@ class WindowHandler():
 		else:
 			self.turnON = True
 		self.drawer.changeCellState(x,y,self.game.cellBoard)
-		# print(f'event pos: {event.x,event.y}')
-		# print(f'relative pos: {x2,y2}')
-		# print(f'board pos: {x,y}')
 
 	def mouseHold(self,event):
 		x2 = self.root.winfo_pointerx() - self.root.winfo_rootx()
@@ -104,9 +99,8 @@ class WindowHandler():
 			steps = 10
 
 		for x in range(steps):
-			print(f'{x+1}/{steps}')
+			print(f'step: {x+1}/{steps}')
 			self.moveForwardOneStep()
-			print('test')
 			time.sleep(speed)
 			self.root.update()
 
@@ -121,9 +115,6 @@ class WindowHandler():
 	def keyPress(self,event):
 		if event.char == "q":
 			self.root.destroy()
-
-	def drawGrid(self):
-		self.drawer.drawGrid(self.canvasWidth,INCREMENT)
 
 	def moveForwardOneStep(self):
 		cellBoardCopy = []
@@ -174,21 +165,9 @@ class WindowHandler():
 				break
 
 class CanvasDrawer():
-	def __init__(self,canvas):
+	def __init__(self,canvas,width):
 		self.canvas = canvas
-
-	def drawGrid(self,width,increment):
-		### width will be same as height
-		self.dX = int(width/increment)
-		for x in range(increment):
-			x1 = self.dX*x
-			y1 = 0
-			y2 = width
-			self.canvas.create_line(x1,y1,x1,y2,fill='white')
-			x1 = 0
-			x2 = width
-			y1 = self.dX*x
-			self.canvas.create_line(x1,y1,x2,y1,fill='white')
+		self.dX = int(width/INCREMENT)
 
 	def drawCell(self,cell):
 		width = self.dX
@@ -215,35 +194,13 @@ class CanvasDrawer():
 class GameLogic():
 	def __init__(self,width):
 		self.width = width
-
-		self.board = [[ 0 for x in range(width)] for x in range(width)]
 		self.cellBoard = [[ 0 for x in range(width)] for x in range(width)]
-
 		self.insertCells()
-		# self.turnOnRandomCells()
-		self.convertBoard()
-
-	def printBoard(self):
-		for row in self.board:
-			print(row)
 
 	def insertCells(self):
 		for y,row in enumerate(self.cellBoard):
 			for x,cell in enumerate(row):
 				self.cellBoard[y][x] = Cell(self,x,y)
-
-	def turnOnRandomCells(self):
-		for row in self.cellBoard:
-			rand = randint(0,INCREMENT-1)
-			row[rand].state = True
-
-	def convertBoard(self):
-		for y,row in enumerate(self.cellBoard):
-			for x,cell in enumerate(row):
-				if cell.state == True:
-					self.board[y][x] = 1
-				else:
-					self.board[y][x] = 0
 
 	def getNeighbors(self,x,y):
 		boundary = len(self.cellBoard)-1
